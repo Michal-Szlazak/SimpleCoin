@@ -1,0 +1,36 @@
+services:
+  node1:
+    image: my-p2p-node:latest
+    build:
+      context: ./Node
+    container_name: node1
+    environment:
+      - SPRING_APPLICATION_NAME=Node1
+      - PORT=8080
+      - STATIC_NODES=ws://node2:8081/ws,ws://node3:8082/ws
+    ports:
+      - "8080:8080"
+
+  node2:
+    image: my-p2p-node:latest
+    build:
+      context: ./Node
+    container_name: node2
+    environment:
+      - SPRING_APPLICATION_NAME=Node2
+      - PORT=8081
+      - STATIC_NODES=ws://node1:8080/ws,ws://node3:8082/ws
+    ports:
+      - "8081:8081"
+
+  node3:
+    image: my-p2p-node:latest
+    build:
+      context: ./Node
+    container_name: node3
+    environment:
+      - SPRING_APPLICATION_NAME=Node3
+      - PORT=8082
+      - STATIC_NODES=ws://node1:8080/ws,ws://node2:8081/ws
+    ports:
+      - "8082:8082"
