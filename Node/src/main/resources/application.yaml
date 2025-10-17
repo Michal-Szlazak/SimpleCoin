@@ -7,3 +7,6 @@ server:
 
 node:
   static-nodes: ${STATIC_NODES}
+  peer-limit: ${PEER_LIMIT:3}
+  node-id: ${NODE_ID:nodeId}
+  ensure-peer-limit: true

@@ -6,8 +6,10 @@ services:
     container_name: node1
     environment:
       - SPRING_APPLICATION_NAME=Node1
+      - NODE_ID=Node1
       - PORT=8080
       - STATIC_NODES=ws://node2:8081/ws,ws://node3:8082/ws
+      - PEER_LIMIT=3
     ports:
       - "8080:8080"
 
@@ -18,8 +20,10 @@ services:
     container_name: node2
     environment:
       - SPRING_APPLICATION_NAME=Node2
+      - NODE_ID=Node2
       - PORT=8081
       - STATIC_NODES=ws://node1:8080/ws,ws://node3:8082/ws
+      - PEER_LIMIT=3
     ports:
       - "8081:8081"
 
@@ -30,7 +34,9 @@ services:
     container_name: node3
     environment:
       - SPRING_APPLICATION_NAME=Node3
+      - NODE_ID=Node3
       - PORT=8082
       - STATIC_NODES=ws://node1:8080/ws,ws://node2:8081/ws
+      - PEER_LIMIT=3
     ports:
       - "8082:8082"

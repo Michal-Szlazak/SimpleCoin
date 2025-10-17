@@ -1,0 +1,7 @@
+server:
+  port: 8080
+
+node:
+  node-id: node1
+  static-nodes:
+    - node2,localhost:8081
