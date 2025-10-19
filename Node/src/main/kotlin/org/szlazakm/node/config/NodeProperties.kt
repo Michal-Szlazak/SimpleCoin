@@ -9,14 +9,17 @@ import org.szlazakm.node.NodeApplication
 class NodeProperties {
     var peerLimit: Int = 2
     var nodeId: String = ""
-    var staticNodes: List<String> = listOf()
+    var staticNodes: String = ""
 
-    fun getStaticNodes(): Map<String, String> =
-        staticNodes
-            .mapNotNull {
+    fun getStaticNodes(): Map<String, String> {
+
+        val listOfPairs = staticNodes.split(";")
+
+        return listOfPairs.mapNotNull {
                 val pair = it.split(",")
                 if (pair.size == 2) pair[0].trim() to pair[1].trim() else null
             }
             .toMap()
+    }
 
 }

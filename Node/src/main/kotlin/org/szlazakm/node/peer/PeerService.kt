@@ -60,11 +60,9 @@ class PeerService(
 
 
     suspend fun registerOutgoingPeer(session: WebSocketSession, targetHost: String, targetNodeId: String) {
-        mutex.withLock {
-            sessions[targetNodeId] = session
-            peers[targetNodeId] = targetHost
-            logger.info("Outgoing peer registered: nodeId=$targetNodeId, host=$targetHost")
-        }
+        sessions[targetNodeId] = session
+        peers[targetNodeId] = targetHost
+        logger.info("Outgoing peer registered: nodeId=$targetNodeId, host=$targetHost")
     }
 
     suspend fun registerIncomingPeer(session: WebSocketSession, nodeId: String) {

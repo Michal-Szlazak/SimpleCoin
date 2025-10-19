@@ -4,4 +4,4 @@ server:
 node:
   node-id: node1
   static-nodes:
-    - node2,localhost:8081
+    - node2;localhost:8081
