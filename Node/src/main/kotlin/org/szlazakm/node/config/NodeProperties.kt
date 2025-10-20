@@ -10,6 +10,8 @@ class NodeProperties {
     var peerLimit: Int = 2
     var nodeId: String = ""
     var staticNodes: String = ""
+    var nodePort: String = ""
+    var nodeHostname: String = ""
 
     fun getStaticNodes(): Map<String, String> {
 

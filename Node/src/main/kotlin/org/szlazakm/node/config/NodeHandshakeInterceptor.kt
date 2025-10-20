@@ -15,7 +15,11 @@ class NodeHandshakeInterceptor : HandshakeInterceptor {
         attributes: MutableMap<String, Any>
     ): Boolean {
         val nodeId = request.uri.query?.substringAfter("nodeId=")?.substringBefore("&") ?: "unknown"
+        val hostname = request.uri.query?.substringAfter("host=")?.substringBefore("&") ?: "unknown"
+        val port = request.uri.query?.substringAfter("port=")?.substringBefore("&") ?: "unknown"
         attributes["nodeId"] = nodeId
+        attributes["hostname"] = hostname
+        attributes["port"] = port
         return true
     }
 

@@ -1,6 +1,7 @@
 package org.szlazakm.node.peer
 
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.WebSocketSession
@@ -18,13 +19,14 @@ class PeerService(
     private val logger = LoggerFactory.getLogger(javaClass)
     private val client = StandardWebSocketClient()
 
+
     suspend fun connectToPeer(targetHost: String, targetNodeId: String) {
         if (peerRegistry.hasSessionFor(targetNodeId)) {
             logger.info("Already connected to peer with nodeId: $targetNodeId")
             return
         }
 
-        val targetUri = "ws://$targetHost/ws?nodeId=${nodeProperties.nodeId}"
+        val targetUri = "ws://$targetHost/ws?nodeId=${nodeProperties.nodeId}&host=${nodeProperties.nodeHostname}&port=${nodeProperties.nodePort}"
         logger.info("Connecting to peer at $targetUri ...")
 
         val future = client.execute(PeerConnectionHandler(this, peerMessageHandler), targetUri)
@@ -39,12 +41,7 @@ class PeerService(
         }
     }
 
-    suspend fun registerIncomingPeer(session: WebSocketSession, nodeId: String) {
-        val remoteAddress = session.remoteAddress?.toString()?.removeSurrounding("/") ?: run {
-            logger.error("Received null remoteAddress for nodeId: [$nodeId]")
-            session.close(CloseStatus.PROTOCOL_ERROR)
-            return
-        }
+    suspend fun registerIncomingPeer(session: WebSocketSession, nodeId: String, hostname: String, port: String) {
 
         if (peerRegistry.hasSessionFor(nodeId)) {
             logger.warn("Peer $nodeId already registered, closing duplicate session")
@@ -52,8 +49,8 @@ class PeerService(
             return
         }
 
-        peerRegistry.registerPeer(nodeId, remoteAddress, session)
-        logger.info("Peer connected: nodeId=$nodeId from $remoteAddress")
+        peerRegistry.registerPeer(nodeId, "$hostname:$port", session)
+        logger.info("Peer connected: nodeId=$nodeId from $hostname:$port")
     }
 
     suspend fun unregisterPeer(session: WebSocketSession) {

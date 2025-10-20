@@ -33,8 +33,11 @@ class PeerMonitorService(
 
                     newSessionCandidate?.let {
 
-                        logger.info("Active Peer limit hasn't been reached (active peers: ${activePeers})." +
-                                " Trying to connect to new peer (${newSessionCandidate}).")
+                        logger.debug(
+                            "Active Peer limit hasn't been reached (active peers: {}). Trying to connect to new peer ({}).",
+                            activePeers,
+                            newSessionCandidate
+                        )
                         peerService.connectToPeer(newSessionCandidate.value, newSessionCandidate.key)
                     }
 

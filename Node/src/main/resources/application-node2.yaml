@@ -1,7 +1,9 @@
 server:
-  port: 8081
+  port: 8091
 
 node:
   node-id: node2
-  static-nodes: node1,localhost:8080
+  static-nodes: node1,localhost:8090
   ensure-peer-limit: false
+  node-hostname: node2
+  node-port: 8091

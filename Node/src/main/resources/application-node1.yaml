@@ -1,6 +1,8 @@
 server:
-  port: 8080
+  port: 8090
 
 node:
   node-id: node1
-  static-nodes: node2,localhost:8081
+  static-nodes: node2,localhost:8091
+  node-hostname: node1
+  node-port: 8090

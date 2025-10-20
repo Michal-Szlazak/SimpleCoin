@@ -3,6 +3,7 @@ package org.szlazakm.node.peer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import lombok.extern.slf4j.Slf4j
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -24,18 +25,24 @@ class PeerConnectionHandler(
 
     override fun afterConnectionEstablished(session: WebSocketSession) {
         val nodeId = session.attributes["nodeId"] as? String
+        val hostname = session.attributes["hostname"] as? String
+        val port = session.attributes["port"] as? String
 
-        nodeId?.let { id ->
-            coroutineScope.launch {
-                try {
-                    peerService.registerIncomingPeer(session, id)
-                } catch (e: Exception) {
-                    log.error("Error registering incoming peer for nodeId=$id", e)
-                    session.close(CloseStatus.SERVER_ERROR)
-                }
+        if (nodeId == null || hostname == null || port == null) {
+            log.debug("Missing required session attributes. Skipping.")
+            return
+        }
+
+        coroutineScope.launch {
+            try {
+                peerService.registerIncomingPeer(session, nodeId, hostname, port)
+            } catch (e: Exception) {
+                log.error("Error registering incoming peer for nodeId=$nodeId", e)
+                session.close(CloseStatus.SERVER_ERROR)
             }
         }
     }
+
 
     override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
         coroutineScope.launch {

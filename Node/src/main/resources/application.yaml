@@ -2,11 +2,10 @@ spring:
   application:
     name: Node
 
-server:
-  port: ${PORT}
-
 node:
   static-nodes: ${STATIC_NODES}
   peer-limit: ${PEER_LIMIT:3}
   node-id: ${NODE_ID:nodeId}
+  node-hostname: ${NODE_HOSTNAME:nodeId}
+  node-port: ${NODE_PORT}
   ensure-peer-limit: true

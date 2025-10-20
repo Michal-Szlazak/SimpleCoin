@@ -16,7 +16,7 @@ import javax.crypto.spec.SecretKeySpec
 @Service
 object KeyService {
 
-    private const val ALGO = "EC"
+    private const val EC = "EC"
     const val TAG_LENGTH_BIT = 128
     const val IV_LENGTH_BYTE = 12
     const val SALT_LENGTH_BYTE = 16;
@@ -24,7 +24,7 @@ object KeyService {
     private const val AES_MODE = "AES/GCM/NoPadding"
 
     fun generateKeyPair(): KeyPair {
-        val keyGen = KeyPairGenerator.getInstance(ALGO)
+        val keyGen = KeyPairGenerator.getInstance(EC)
         keyGen.initialize(256)
         return keyGen.generateKeyPair()
     }
