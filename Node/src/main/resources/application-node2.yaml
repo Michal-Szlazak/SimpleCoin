@@ -3,6 +3,5 @@ server:
 
 node:
   node-id: node2
-  static-nodes:
-    - node1;localhost:8080
+  static-nodes: node1,localhost:8080
   ensure-peer-limit: false

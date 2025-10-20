@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: Wallet
+
+server:
+  port: ${PORT}
+
+node:
+  static-nodes: ${STATIC_NODES}

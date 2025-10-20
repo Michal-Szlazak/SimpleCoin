@@ -1,5 +1,7 @@
 package org.szlazakm.node
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -14,6 +16,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.scheduling.annotation.Scheduled
 import org.szlazakm.node.config.NodeProperties
 import org.szlazakm.node.peer.PeerService
+import org.szlazakm.node.peer.message.PeerMessenger
 
 @Slf4j
 @SpringBootApplication
@@ -21,28 +24,39 @@ import org.szlazakm.node.peer.PeerService
 @EnableScheduling
 class NodeApplication(
     private val peerService: PeerService,
-    private val nodeProperties: NodeProperties,
+    private val peerMessenger: PeerMessenger,
+    private val nodeProperties: NodeProperties
 ) {
+
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     private val logger = LoggerFactory.getLogger(NodeApplication::class.java)
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(initialDelay = 30_000, fixedRate = 10_000)
     fun gossipPeers() {
-        GlobalScope.launch {
-            peerService.broadcastPeerList()
+        coroutineScope.launch {
+            try {
+                peerMessenger.broadcastPeerList()
+            } catch (e: Exception) {
+                logger.error("Error broadcasting peer list", e)
+            }
         }
     }
 
     @Bean
     fun startup(): CommandLineRunner = CommandLineRunner {
-
         val nodes = nodeProperties.getStaticNodes()
-
         logger.info("Loading static peers (${nodes.size})")
 
-        GlobalScope.launch {
+        coroutineScope.launch {
             delay(2000)
-            nodes.forEach { peerService.connectToPeer(it.value, it.key) }
+            nodes.forEach { (nodeId, host) ->
+                try {
+                    peerService.connectToPeer(host, nodeId)
+                } catch (e: Exception) {
+                    logger.error("Failed to connect to peer $nodeId at $host", e)
+                }
+            }
         }
     }
 }

@@ -21,7 +21,5 @@ class NodeHandshakeInterceptor : HandshakeInterceptor {
 
     override fun afterHandshake(
         request: ServerHttpRequest, response: ServerHttpResponse, wsHandler: WebSocketHandler, ex: Exception?
-    ) {
-        val nodeId = request.uri.query?.substringAfter("nodeId=")?.substringBefore("&") ?: "unknown"
-    }
+    ) { }
 }

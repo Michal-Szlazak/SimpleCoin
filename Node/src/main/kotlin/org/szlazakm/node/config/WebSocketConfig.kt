@@ -5,7 +5,6 @@ import org.springframework.web.socket.config.annotation.EnableWebSocket
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 import org.szlazakm.node.peer.PeerConnectionHandler
-import org.szlazakm.node.peer.PeerService
 
 @Configuration
 @EnableWebSocket

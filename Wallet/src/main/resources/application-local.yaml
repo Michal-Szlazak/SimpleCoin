@@ -1,0 +1,5 @@
+server:
+  port: 4000
+
+node:
+  static-nodes: ${STATIC_NODES:}
