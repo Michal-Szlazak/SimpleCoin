@@ -15,6 +15,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.scheduling.annotation.Scheduled
 import org.szlazakm.node.config.NodeProperties
+import org.szlazakm.node.data.MessageType
+import org.szlazakm.node.data.RequestChainMessage
 import org.szlazakm.node.peer.PeerService
 import org.szlazakm.node.peer.message.PeerMessenger
 
@@ -57,6 +59,7 @@ class NodeApplication(
                     logger.error("Failed to connect to peer $nodeId at $host", e)
                 }
             }
+            peerMessenger.broadcast(RequestChainMessage(MessageType.REQUEST_CHAIN))
         }
     }
 }

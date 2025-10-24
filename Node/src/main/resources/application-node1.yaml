@@ -4,5 +4,9 @@ server:
 node:
   node-id: node1
   static-nodes: node2,localhost:8091
-  node-hostname: node1
+  node-hostname: localhost
   node-port: 8090
+
+miner:
+  enabled: true
+  difficulty: 5

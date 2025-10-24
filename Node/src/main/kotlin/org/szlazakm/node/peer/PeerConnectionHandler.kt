@@ -43,7 +43,6 @@ class PeerConnectionHandler(
         }
     }
 
-
     override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
         coroutineScope.launch {
             try {

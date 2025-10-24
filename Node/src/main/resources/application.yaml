@@ -9,3 +9,7 @@ node:
   node-hostname: ${NODE_HOSTNAME:nodeId}
   node-port: ${NODE_PORT}
   ensure-peer-limit: true
+
+miner:
+  enabled: ${MINER_ENABLED:false}
+  difficulty: ${MINER_DIFFICULTY:4}

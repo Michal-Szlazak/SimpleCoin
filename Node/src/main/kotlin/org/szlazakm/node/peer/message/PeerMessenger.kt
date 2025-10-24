@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
-import org.szlazakm.node.data.Message
+import org.szlazakm.node.data.*
 import org.szlazakm.node.peer.PeerRegistry
 
 @Service
@@ -16,38 +16,39 @@ class PeerMessenger(
 ) {
     private val mapper = jacksonObjectMapper()
 
-    suspend fun sendPong(session: WebSocketSession) {
-        send(session, mapOf("type" to "PONG"))
-    }
+    // === BASIC PING/PONG ===
+    suspend fun sendPing(session: WebSocketSession) = send(session, PingMessage())
+    suspend fun sendPong(session: WebSocketSession) = send(session, PongMessage())
 
-    suspend fun sendPing(session: WebSocketSession) {
-        send(session, mapOf("type" to "PING"))
-    }
+    suspend fun broadcastPing() = broadcast(PingMessage())
 
+    // === PEER LIST ===
     suspend fun broadcastPeerList() {
         val peers = peerRegistry.getPeers()
-        val msg = Message("PEER_LIST", peers)
-        val json = mapper.writeValueAsString(msg)
-        broadcast(json)
+        val message = PeerListMessage(peers = peers)
+        broadcast(message)
     }
 
-    suspend fun broadcastPing() {
-        broadcast(mapOf("type" to "PING"))
-    }
+    // === BLOCKCHAIN SYNC ===
+    suspend fun broadcastNewBlock(block: Block) = broadcast(NewBlockMessage(block = block))
 
-    private suspend fun broadcast(json: String) {
+    suspend fun sendRequestChain(session: WebSocketSession) =
+        send(session, RequestChainMessage())
+
+    suspend fun sendChainResponse(session: WebSocketSession, blocks: List<Block>) =
+        send(session, ChainResponseMessage(blocks = blocks))
+
+    // === GENERIC SEND / BROADCAST ===
+    suspend fun broadcast(message: BaseMessage) {
+        val json = mapper.writeValueAsString(message)
         peerRegistry.getSessions().forEach { session ->
             send(session, json)
         }
     }
 
-    private suspend fun broadcast(message: Map<String, Any>) {
+    suspend fun send(session: WebSocketSession, message: BaseMessage) {
         val json = mapper.writeValueAsString(message)
-        broadcast(json)
-    }
-
-    private suspend fun send(session: WebSocketSession, message: Map<String, Any>) {
-        send(session, jacksonObjectMapper().writeValueAsString(message))
+        send(session, json)
     }
 
     private suspend fun send(session: WebSocketSession, json: String) {
