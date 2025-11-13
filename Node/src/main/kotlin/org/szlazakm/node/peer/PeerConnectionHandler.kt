@@ -14,7 +14,6 @@ import org.springframework.web.socket.handler.TextWebSocketHandler
 import org.szlazakm.node.peer.message.PeerMessageHandler
 
 @Component
-@Slf4j
 class PeerConnectionHandler(
     private val peerService: PeerService,
     private val peerMessageHandler: PeerMessageHandler

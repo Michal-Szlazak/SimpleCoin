@@ -2,7 +2,6 @@ package org.szlazakm.node
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import lombok.extern.slf4j.Slf4j
@@ -15,12 +14,11 @@ import org.springframework.context.annotation.Bean
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.scheduling.annotation.Scheduled
 import org.szlazakm.node.config.NodeProperties
-import org.szlazakm.node.data.MessageType
-import org.szlazakm.node.data.RequestChainMessage
+import org.szlazakm.node.domain.MessageType
+import org.szlazakm.node.domain.RequestChainMessage
 import org.szlazakm.node.peer.PeerService
 import org.szlazakm.node.peer.message.PeerMessenger
 
-@Slf4j
 @SpringBootApplication
 @EnableConfigurationProperties(NodeProperties::class)
 @EnableScheduling

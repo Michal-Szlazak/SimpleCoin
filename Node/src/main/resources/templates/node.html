@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>SimpleCoin Node</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f9fafb;
+            color: #333;
+            margin: 40px;
+        }
+
+        h1 {
+            color: #007bff;
+        }
+
+        .miner-section {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 8px;
+            background: #fff;
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        input[type=text],
+        input[type=number] {
+            width: 300px;
+            padding: 5px;
+        }
+
+        button {
+            padding: 8px 14px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .message {
+            color: green;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<h1>SimpleCoin Node</h1>
+
+<div class="miner-section">
+    <h2>Miner Configuration</h2>
+
+    <form th:action="@{/node/miner/update}" th:object="${miner}" method="post">
+        <div class="form-group">
+            <label>Enabled:</label>
+            <input type="checkbox" th:field="*{enabled}"/> <span th:text="${miner.enabled} ? 'Enabled' : 'Disabled'"></span>
+        </div>
+
+        <div class="form-group">
+            <label>Difficulty:</label>
+            <input type="number" min="1" th:field="*{difficulty}"/>
+        </div>
+
+        <div class="form-group">
+            <label>Address:</label>
+            <input type="text" th:field="*{address}" placeholder="Enter wallet address"/>
+        </div>
+
+        <div class="form-group">
+            <label>Public Key:</label>
+            <input type="text" th:field="*{publicKey}" placeholder="Enter public key"/>
+        </div>
+
+        <button type="submit">Update Miner</button>
+    </form>
+
+    <div th:if="${message}" class="message" th:text="${message}"></div>
+</div>
+
+<!-- Optional miner status -->
+<div class="miner-section" th:if="${miner.enabled}">
+    <h2>Miner Status</h2>
+    <p>Mining at difficulty <strong th:text="${miner.difficulty}"></strong></p>
+    <p>Address: <strong th:text="${miner.address}"></strong></p>
+</div>
+
+
+</body>
+</html>

@@ -1,56 +1,64 @@
 package org.szlazakm.node.block
 
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
-import org.szlazakm.node.data.Block
-import org.szlazakm.node.data.ChainResponseMessage
+import org.szlazakm.node.domain.Block
+import org.szlazakm.node.domain.BlockChainEventNewBlock
+import org.szlazakm.node.domain.BlockHeader
+import org.szlazakm.node.domain.BlockchainEvent
+import org.szlazakm.node.domain.BlockchainEventType
+import org.szlazakm.node.transaction.TransactionValidator
 import java.util.concurrent.CopyOnWriteArrayList
-import kotlin.math.log
 
 @Service
-class Blockchain {
+class Blockchain(
+    private val eventPublisher: ApplicationEventPublisher,
+    private val transactionValidator: TransactionValidator,
+) {
 
     private val logger = LoggerFactory.getLogger(Blockchain::class.java)
 
     private val mainChain = mutableListOf<Block>()
-
-    private val chainHeadListeners = CopyOnWriteArrayList<(Block) -> Unit>()
 
     companion object {
         private const val ALLOWED_FUTURE_DRIFT = 2 * 60 * 1000
     }
 
     init {
-        val genesis = Block(
+        val genesis = BlockHeader(
             index = 0,
             timestamp = 1231006505,
             previousHash = "0",
             hash = "genesis_hash",
-            data = "Genesis Block",
             nonce = 0
         )
 
         val hash = calculateHash(genesis)
         val genesisWithHash = genesis.copy(hash = hash)
 
-        mainChain.add(genesisWithHash)
+        mainChain.add(
+            Block(genesisWithHash, emptyList())
+        )
     }
 
     fun getLastBlock(): Block = mainChain.last()
 
     fun getAllBlocks(): List<Block> = mainChain.toList()
 
-    fun addChainHeadListener(listener: (Block) -> Unit) {
-        chainHeadListeners.add(listener)
-    }
-
-    private fun notifyChainHeadChanged(block: Block) {
-        chainHeadListeners.forEach { it.invoke(block) }
-    }
-
     @Synchronized
     fun addBlock(block: Block): Boolean {
+
+        val validTransactions = transactionValidator.validateTransactions(block.transactions)
+
+        if(validTransactions.isFailure) {
+            logger.warn("Transactions from block ${block.header.hash} is invalid. Skipping")
+            return false
+        }
+
         val lastBlock = getLastBlock()
+        val blockHeader = block.header
+        val lastBlockHeader = lastBlock.header
 
         return when {
             // 1. Extends current main chain
@@ -61,22 +69,25 @@ class Blockchain {
                 false
             }
 
-            block.previousHash == lastBlock.hash && isValidNewBlock(block, lastBlock) -> {
+            blockHeader.previousHash == lastBlockHeader.hash && isValidNewBlock(blockHeader, lastBlockHeader) -> {
                 mainChain.add(block)
-                logger.info("Added block #${block.index} to main chain")
-                notifyChainHeadChanged(block)
+                logger.info("Added block #${blockHeader.index} to main chain")
+
+                eventPublisher.publishEvent(
+                    BlockChainEventNewBlock(BlockchainEventType.NEW_BLOCK, block)
+                )
                 true
             }
 
             // 2. Creates a fork (previous hash somewhere in chain)
-            mainChain.any { it.hash == block.previousHash && it != block} -> {
-                logger.info("Fork detected at block with hash ${block.previousHash}")
+            mainChain.any { it.header.hash == blockHeader.previousHash && it.header != blockHeader} -> {
+                logger.info("Fork detected at block with hash ${blockHeader.previousHash}")
                 //TODO handle potential fork chains
                 false
             }
 
             else -> {
-                logger.warn("Received orphan block (no known parent): ${block.hash}")
+                logger.warn("Received orphan block (no known parent): ${blockHeader.hash}")
                 //TODO Resolve the missing parent, request the chain from node
                 false
             }
@@ -86,47 +97,49 @@ class Blockchain {
     @Synchronized
     fun resolveChain(blocks: List<Block>) {
 
-        if (validateChain(blocks) && blocks.size > mainChain.size) {
-            logger.info("Received chain is longer than current main chain. Replacing main chain. (main: ${mainChain.size}, new: ${blocks.size})")
+        val blockHeaders = blocks.map { it.header }
+
+        if (validateChain(blockHeaders) && blockHeaders.size > mainChain.size) {
+            logger.info("Received chain is longer than current main chain. Replacing main chain. (main: ${mainChain.size}, new: ${blockHeaders.size})")
             mainChain.clear()
             mainChain.addAll(blocks)
         }
     }
 
-    fun validateChain(blocks: List<Block>): Boolean {
+    fun validateChain(blockHeaders: List<BlockHeader>): Boolean {
 
-        for(i in 1 until blocks.size) {
-            if(!isValidBlock(blocks[i], blocks[i - 1])) {
+        for(i in 1 until blockHeaders.size) {
+            if(!isValidBlock(blockHeaders[i], blockHeaders[i - 1])) {
                 return false
             }
         }
         return true
     }
 
-    private fun isValidBlock(newBlock: Block, previousBlock: Block): Boolean {
-        return previousBlock.index + 1 == newBlock.index &&
-                previousBlock.hash == newBlock.previousHash &&
-                newBlock.hash == calculateHash(newBlock)
+    private fun isValidBlock(newBlockHeader: BlockHeader, previousBlockHeader: BlockHeader): Boolean {
+        return previousBlockHeader.index + 1 == newBlockHeader.index &&
+                previousBlockHeader.hash == newBlockHeader.previousHash &&
+                newBlockHeader.hash == calculateHash(newBlockHeader)
     }
 
-    private fun isValidNewBlock(newBlock: Block, previousBlock: Block): Boolean {
-        return previousBlock.index + 1 == newBlock.index &&
-                previousBlock.hash == newBlock.previousHash &&
-                newBlock.hash == calculateHash(newBlock) &&
-                isValidTimestamp(newBlock, previousBlock)
+    private fun isValidNewBlock(newBlockHeader: BlockHeader, previousBlockHeader: BlockHeader): Boolean {
+        return previousBlockHeader.index + 1 == newBlockHeader.index &&
+                previousBlockHeader.hash == newBlockHeader.previousHash &&
+                newBlockHeader.hash == calculateHash(newBlockHeader) &&
+                isValidTimestamp(newBlockHeader, previousBlockHeader)
     }
 
-    private fun isValidTimestamp(newBlock: Block, previousBlock: Block): Boolean {
+    private fun isValidTimestamp(newBlockHeader: BlockHeader, previousBlockHeader: BlockHeader): Boolean {
         val now = System.currentTimeMillis()
 
         //Timestamp must not be too far in the future
-        if (newBlock.timestamp > now + ALLOWED_FUTURE_DRIFT) {
-            logger.warn("Block timestamp too far in the future: ${newBlock.timestamp - now}ms ahead")
+        if (newBlockHeader.timestamp > now + ALLOWED_FUTURE_DRIFT) {
+            logger.warn("Block timestamp too far in the future: ${newBlockHeader.timestamp - now}ms ahead")
             return false
         }
 
         //Timestamp must be >= previous block’s timestamp
-        if (newBlock.timestamp <= previousBlock.timestamp) {
+        if (newBlockHeader.timestamp <= previousBlockHeader.timestamp) {
             logger.warn("Block timestamp is not greater than previous block's timestamp")
             return false
         }
@@ -134,8 +147,8 @@ class Blockchain {
         return true
     }
 
-    private fun calculateHash(block: Block): String {
-        val input = "${block.index}${block.timestamp}${block.previousHash}${block.data}${block.nonce}"
+    private fun calculateHash(blockHeader: BlockHeader): String {
+        val input = "${blockHeader.index}${blockHeader.timestamp}${blockHeader.previousHash}${blockHeader.nonce}"
         return input.toByteArray().sha256()
     }
 

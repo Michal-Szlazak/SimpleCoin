@@ -27,6 +27,7 @@ repositories {
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
     implementation("org.springframework.boot:spring-boot-starter-websocket")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -35,12 +36,17 @@ dependencies {
     implementation("org.reactivestreams:reactive-streams")
     implementation("io.projectreactor:reactor-core:3.6.8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.9.0")
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 
 
     compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
+    testImplementation("org.assertj:assertj-core:4.0.0-M1")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

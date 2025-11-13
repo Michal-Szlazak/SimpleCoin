@@ -2,35 +2,37 @@ package org.szlazakm.node.block
 
 import org.springframework.stereotype.Component
 import org.szlazakm.node.config.MinerProperties
-import org.szlazakm.node.data.Block
+import org.szlazakm.node.domain.BlockHeader
+import java.time.InstantSource
 
 @Component
 class BlockFactory(
     private val blockchain: Blockchain,
     minerProperties: MinerProperties,
+    private val instantSource: InstantSource
 ) {
 
     private val hashPrefix = "0".repeat(minerProperties.difficulty)
 
-    fun createBlock(data: String): Block {
+    suspend fun createBlockHeader(): BlockHeader {
         val lastBlock = blockchain.getLastBlock()
-        val index = lastBlock.index + 1
-        val timestamp = System.currentTimeMillis()
-        val previousHash = lastBlock.hash
+        val index = lastBlock.header.index + 1
+        val timestamp = instantSource.instant().toEpochMilli()
+        val previousHash = lastBlock.header.hash
 
         var nonce = 0L
         var hash: String
 
         do {
             nonce++
-            hash = calculateHash(index, timestamp, previousHash, data, nonce)
+            hash = calculateHash(index, timestamp, previousHash, nonce)
         } while (!hash.startsWith(hashPrefix))
 
-        return Block(index, timestamp, previousHash, hash, data, nonce)
+        return BlockHeader(index, timestamp, previousHash, hash, nonce)
     }
 
-    private fun calculateHash(index: Int, timestamp: Long, previousHash: String, data: String, nonce: Long): String {
-        val input = "$index$timestamp$previousHash$data$nonce"
+    private fun calculateHash(index: Int, timestamp: Long, previousHash: String, nonce: Long): String {
+        val input = "$index$timestamp$previousHash$nonce"
         return input.toByteArray().sha256()
     }
 

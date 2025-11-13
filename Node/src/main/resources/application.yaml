@@ -2,6 +2,10 @@ spring:
   application:
     name: Node
 
+  thymeleaf:
+    cache: false
+    prefix: file:src/main/resources/templates/
+
 node:
   static-nodes: ${STATIC_NODES}
   peer-limit: ${PEER_LIMIT:3}
@@ -13,3 +17,6 @@ node:
 miner:
   enabled: ${MINER_ENABLED:false}
   difficulty: ${MINER_DIFFICULTY:4}
+  reward: ${MINER_REWARD:3}
+  address: ${MINER_ADDRESS:}
+  public-key: ${MINER_PUBLIC_KEY:}

@@ -1,12 +1,18 @@
-package com.szlazakm.wallet
+package com.szlazakm.wallet.wallet
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.szlazakm.wallet.data.Identity
+import com.szlazakm.wallet.domain.Identity
+import com.szlazakm.wallet.domain.NamedIdentity
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.IOException
-import java.nio.file.*
+import java.nio.file.FileAlreadyExistsException
+import java.nio.file.Files
+import java.nio.file.NoSuchFileException
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 
 @Service
 class PersistenceService {
@@ -26,23 +32,25 @@ class PersistenceService {
         }
     }
 
-    fun persist(name: String, identity: Identity) {
+    fun persist(name: String, identity: Identity): Result<Unit> {
         val file = baseDir.resolve("$name$FILE_EXTENSION")
 
         if (!file.normalize().startsWith(baseDir)) {
-            throw SecurityException("Invalid filename path: $name")
+            return Result.failure(IOException("$name not in $baseDir"))
         }
 
         if (Files.exists(file)) {
-            throw FileAlreadyExistsException("Identity file $file already exists.")
+            return Result.failure(IOException("$name already exists"))
         }
 
         try {
             val json = mapper.writeValueAsString(identity)
             Files.writeString(file, json, StandardOpenOption.CREATE_NEW)
         } catch (ex: IOException) {
-            throw RuntimeException("Failed to persist identity: ${ex.message}", ex)
+            return Result.failure(ex)
         }
+
+        return Result.success(Unit)
     }
 
     fun retrieve(name: String): Identity {
@@ -56,7 +64,7 @@ class PersistenceService {
         return mapper.readValue(json)
     }
 
-    fun retrieveAll(): List<Identity> {
+    fun retrieveAll(): List<NamedIdentity> {
         if (Files.notExists(baseDir)) return emptyList()
 
         return Files.list(baseDir).use { stream ->
@@ -65,7 +73,8 @@ class PersistenceService {
                 .map { path ->
                     try {
                         val json = Files.readString(path)
-                        mapper.readValue<Identity>(json)
+                        val identity = mapper.readValue<Identity>(json)
+                        return@map NamedIdentity(identity, path.fileName.toString().replace(FILE_EXTENSION, ""))
                     } catch (ex: Exception) {
                         logger.warn("Skipping invalid identity file: ${path.fileName} (${ex.message})")
                         null

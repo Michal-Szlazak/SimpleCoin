@@ -3,7 +3,6 @@ package org.szlazakm.node.peer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import lombok.extern.slf4j.Slf4j
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Service
 import org.szlazakm.node.config.NodeProperties
 
 @Service
-@Slf4j
 class PeerMonitorService(
     private val peerService: PeerService,
     private val peerRegistry: PeerRegistry,

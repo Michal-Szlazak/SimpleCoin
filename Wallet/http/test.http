@@ -1,0 +1,5 @@
+### GET request to example server
+@walletAddress = tdYJVUtGjOWi6mGHzI0O/+8pSyA=
+GET http://localhost:4000/transaction/balance/tdYJVUtGjOWi6mGHzI0O%2F%2B8pSyA%3D
+
+###

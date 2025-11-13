@@ -7,13 +7,13 @@ import org.springframework.stereotype.Service
 import org.springframework.web.socket.WebSocketSession
 import org.szlazakm.node.block.Blockchain
 import org.szlazakm.node.config.NodeProperties
-import org.szlazakm.node.data.BaseMessage
-import org.szlazakm.node.data.ChainResponseMessage
-import org.szlazakm.node.data.NewBlockMessage
-import org.szlazakm.node.data.PeerListMessage
-import org.szlazakm.node.data.PingMessage
-import org.szlazakm.node.data.PongMessage
-import org.szlazakm.node.data.RequestChainMessage
+import org.szlazakm.node.domain.BaseMessage
+import org.szlazakm.node.domain.ChainResponseMessage
+import org.szlazakm.node.domain.NewBlockMessage
+import org.szlazakm.node.domain.PeerListMessage
+import org.szlazakm.node.domain.PingMessage
+import org.szlazakm.node.domain.PongMessage
+import org.szlazakm.node.domain.RequestChainMessage
 import org.szlazakm.node.peer.PeerRegistry
 
 
@@ -54,7 +54,7 @@ class PeerMessageHandler(
                 }
             }
             is NewBlockMessage -> {
-                logger.info("Received NEW_BLOCK: ${message.block.index}")
+                logger.info("Received NEW_BLOCK: ${message.block.header.index}")
                 if (blockchain.addBlock(message.block)) {
                     logger.info("Block added to local chain")
                     peerMessenger.broadcast(message) // propagate

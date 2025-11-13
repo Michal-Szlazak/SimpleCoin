@@ -3,3 +3,8 @@ server:
 
 node:
   static-nodes: ${STATIC_NODES:}
+
+spring:
+  thymeleaf:
+    cache: false
+    prefix: file:src/main/resources/templates/

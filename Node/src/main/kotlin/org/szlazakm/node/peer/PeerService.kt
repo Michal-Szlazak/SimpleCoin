@@ -26,7 +26,7 @@ class PeerService(
             return
         }
 
-        val targetUri = "ws://$targetHost/ws?nodeId=${nodeProperties.nodeId}&host=${nodeProperties.nodeHostname}&port=${nodeProperties.nodePort}"
+        val targetUri = "ws://$targetHost/ws/node?nodeId=${nodeProperties.nodeId}&host=${nodeProperties.nodeHostname}&port=${nodeProperties.nodePort}"
         logger.info("Connecting to peer at $targetUri ...")
 
         val future = client.execute(PeerConnectionHandler(this, peerMessageHandler), targetUri)
@@ -37,7 +37,7 @@ class PeerService(
             peerRegistry.registerPeer(targetNodeId, targetHost, session)
             logger.info("Connected to peer: $targetHost as nodeId=${nodeProperties.nodeId}")
         }.onFailure {
-            logger.error("Failed to connect to peer at $targetUri", it)
+            logger.error("Failed to connect to peer at $targetUri")
         }
     }
 

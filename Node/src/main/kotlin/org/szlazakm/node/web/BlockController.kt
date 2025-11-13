@@ -4,7 +4,8 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.szlazakm.node.block.Blockchain
-import org.szlazakm.node.data.Block
+import org.szlazakm.node.domain.Block
+import org.szlazakm.node.domain.BlockHeader
 
 @RestController
 @RequestMapping("/block")

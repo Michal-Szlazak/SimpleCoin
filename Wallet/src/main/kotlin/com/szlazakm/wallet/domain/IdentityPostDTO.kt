@@ -1,4 +1,4 @@
-package com.szlazakm.wallet.data
+package com.szlazakm.wallet.domain
 
 data class IdentityPostDTO(
     val name: String,

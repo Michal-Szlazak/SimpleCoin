@@ -10,3 +10,5 @@ node:
 miner:
   enabled: true
   difficulty: 5
+  address: "pawRn2srgWWEguTbdpo59Cc0QLk="
+  public-key: ${MINER_PUBLIC_KEY:}

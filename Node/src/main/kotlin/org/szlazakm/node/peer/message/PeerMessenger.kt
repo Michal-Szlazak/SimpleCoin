@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
-import org.szlazakm.node.data.*
+import org.szlazakm.node.domain.*
 import org.szlazakm.node.peer.PeerRegistry
 
 @Service

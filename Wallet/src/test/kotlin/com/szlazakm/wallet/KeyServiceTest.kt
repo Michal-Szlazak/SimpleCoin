@@ -1,5 +1,6 @@
 package com.szlazakm.wallet
 
+import com.szlazakm.wallet.wallet.KeyService
 import org.assertj.core.api.Assertions.assertThat
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.jupiter.api.Test

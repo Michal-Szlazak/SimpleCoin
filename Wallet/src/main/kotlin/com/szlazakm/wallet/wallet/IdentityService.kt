@@ -1,20 +1,18 @@
-package com.szlazakm.wallet
+package com.szlazakm.wallet.wallet
 
-import com.szlazakm.wallet.data.Identity
+import com.szlazakm.wallet.domain.Identity
 import org.springframework.stereotype.Service
 import java.util.Base64
 
 @Service
-class IdentityService(
-    private val keyService: KeyService,
-) {
+class IdentityService() {
 
     fun generateNewIdentity(password: String): Identity {
 
-        val keyPair = keyService.generateKeyPair()
-        val encryptionData = keyService.encryptPrivateKey(keyPair.private, password)
+        val keyPair = KeyService.generateKeyPair()
+        val encryptionData = KeyService.encryptPrivateKey(keyPair.private, password)
 
-        val address = keyService.sha256Ripemd160(keyPair.public.encoded)
+        val address = KeyService.sha256Ripemd160(keyPair.public.encoded)
 
         return Identity(
             address = address,
@@ -24,5 +22,4 @@ class IdentityService(
             iv = encryptionData.iv,
         )
     }
-
 }
