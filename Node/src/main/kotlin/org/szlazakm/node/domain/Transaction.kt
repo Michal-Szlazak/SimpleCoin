@@ -1,5 +1,6 @@
 package org.szlazakm.node.domain
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import java.security.MessageDigest
 
 data class TxInput(
@@ -36,6 +37,7 @@ data class Transaction(
         }
     }
 
+    @JsonIgnore
     fun isCoinbase(): Boolean {
         if(inputs.size != 1) return false
         if(outputs.size != 1) return false

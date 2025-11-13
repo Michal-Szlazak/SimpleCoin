@@ -38,7 +38,7 @@ class Miner(
 
     @EventListener
     fun onBlockchainEvent(event: BlockchainEvent) {
-        println("Miner notified: ${event.type} event, adjusting strategy.")
+        logger.info("Miner notified: ${event.type} event, adjusting strategy.")
 
         when(event) {
             is BlockChainEventNewBlock -> onChainHeadChanged(event.newBlock)

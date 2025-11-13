@@ -15,11 +15,10 @@ import java.util.concurrent.CopyOnWriteArrayList
 class Blockchain(
     private val eventPublisher: ApplicationEventPublisher,
     private val transactionValidator: TransactionValidator,
+    private val blockchainRepository: BlockchainRepository
 ) {
 
     private val logger = LoggerFactory.getLogger(Blockchain::class.java)
-
-    private val mainChain = mutableListOf<Block>()
 
     companion object {
         private const val ALLOWED_FUTURE_DRIFT = 2 * 60 * 1000
@@ -37,14 +36,14 @@ class Blockchain(
         val hash = calculateHash(genesis)
         val genesisWithHash = genesis.copy(hash = hash)
 
-        mainChain.add(
+        blockchainRepository.addBlock(
             Block(genesisWithHash, emptyList())
         )
     }
 
-    fun getLastBlock(): Block = mainChain.last()
+    fun getLastBlock(): Block = blockchainRepository.getLast()
 
-    fun getAllBlocks(): List<Block> = mainChain.toList()
+    fun getAllBlocks(): List<Block> = blockchainRepository.getAll()
 
     @Synchronized
     fun addBlock(block: Block): Boolean {
@@ -63,14 +62,14 @@ class Blockchain(
         return when {
             // 1. Extends current main chain
 
-            mainChain.any { it == block } -> {
+            blockchainRepository.getAll().any { it == block } -> {
                 logger.info("Received existing block. Skipping.")
                 //TODO handle potential fork chains
                 false
             }
 
             blockHeader.previousHash == lastBlockHeader.hash && isValidNewBlock(blockHeader, lastBlockHeader) -> {
-                mainChain.add(block)
+                blockchainRepository.addBlock(block)
                 logger.info("Added block #${blockHeader.index} to main chain")
 
                 eventPublisher.publishEvent(
@@ -80,7 +79,7 @@ class Blockchain(
             }
 
             // 2. Creates a fork (previous hash somewhere in chain)
-            mainChain.any { it.header.hash == blockHeader.previousHash && it.header != blockHeader} -> {
+            blockchainRepository.getAll().any { it.header.hash == blockHeader.previousHash && it.header != blockHeader} -> {
                 logger.info("Fork detected at block with hash ${blockHeader.previousHash}")
                 //TODO handle potential fork chains
                 false
@@ -99,10 +98,10 @@ class Blockchain(
 
         val blockHeaders = blocks.map { it.header }
 
-        if (validateChain(blockHeaders) && blockHeaders.size > mainChain.size) {
-            logger.info("Received chain is longer than current main chain. Replacing main chain. (main: ${mainChain.size}, new: ${blockHeaders.size})")
-            mainChain.clear()
-            mainChain.addAll(blocks)
+        if (validateChain(blockHeaders) && blockHeaders.size > blockchainRepository.size()) {
+            logger.info("Received chain is longer than current main chain. Replacing main chain. (main: ${blockchainRepository.size()}, new: ${blockHeaders.size})")
+            blockchainRepository.clear()
+            blockchainRepository.addAll(blocks)
         }
     }
 
