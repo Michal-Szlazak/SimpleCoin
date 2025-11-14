@@ -13,7 +13,6 @@ class MemPool(
 
     private val logger = LoggerFactory.getLogger(javaClass)
     private val pool: MutableList<Transaction> = Collections.synchronizedList(mutableListOf<Transaction>())
-    private val drainedPool: MutableMap<String, List<Transaction>> = Collections.synchronizedMap(mutableMapOf())
 
     fun addTransaction(transaction: Transaction): Result<Unit> {
 
@@ -29,23 +28,8 @@ class MemPool(
         }
     }
 
-    fun drainPool(blockHash: String): List<Transaction> {
-        synchronized(pool) {
-            val currentList = pool.toList()
-            pool.clear()
-            drainedPool[blockHash] = currentList
-            return currentList
-        }
-    }
+    fun getAll(): List<Transaction> = pool.toList()
 
-    fun restoreDrainedTransactions(blockHash: String) {
-
-        val drainedTransactions = drainedPool[blockHash]
-        drainedTransactions?.let {
-            pool.addAll(it)
-        } ?: {
-            logger.warn("No drained transactions found for hash $blockHash. Transactions not restored.")
-        }
-    }
+    fun clear() = pool.clear()
 
 }

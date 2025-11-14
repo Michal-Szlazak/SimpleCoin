@@ -94,7 +94,7 @@ class Miner(
                 continue
             }
 
-            val poolTransactions = memPool.drainPool(newBlockHeader.hash)
+            val poolTransactions = memPool.getAll()
             val transactions = listOf(createRewardTransaction(lastBlock.header.index)) + poolTransactions
             val newBlock = Block(newBlockHeader, transactions)
             val added = blockchain.addBlock(newBlock)
@@ -102,9 +102,9 @@ class Miner(
             if (added) {
                 logger.info("Mined new block #${newBlockHeader.index}")
                 peerMessenger.broadcastNewBlock(newBlock)
+                memPool.clear()
             } else {
                 logger.warn("Mined block rejected (chain moved?), restarting...")
-                memPool.restoreDrainedTransactions(newBlockHeader.hash)
             }
 
         }

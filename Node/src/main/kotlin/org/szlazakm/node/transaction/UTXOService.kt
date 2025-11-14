@@ -1,8 +1,10 @@
 package org.szlazakm.node.transaction
 
+import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
+import org.szlazakm.node.block.jpa.BlockchainRepository
 import org.szlazakm.node.domain.Block
 import org.szlazakm.node.domain.BlockChainEventNewBlock
 import org.szlazakm.node.domain.BlockChainEventRebuilt
@@ -11,10 +13,17 @@ import org.szlazakm.node.domain.TxOutput
 import java.util.concurrent.ConcurrentHashMap
 
 @Service
-class UTXOService {
+class UTXOService(
+    private val blockchainRepository: BlockchainRepository
+) {
 
     private val logger = LoggerFactory.getLogger(UTXOService::class.java)
     private val utxos = ConcurrentHashMap<String, TxOutput>()
+
+    @PostConstruct
+    fun onInit() {
+        rebuildFromChain(blockchainRepository.findAll().map { it.toDomain() })
+    }
 
     @EventListener
     fun onBlockchainEvent(event: BlockchainEvent) {

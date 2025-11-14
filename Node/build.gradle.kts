@@ -37,7 +37,8 @@ dependencies {
     implementation("io.projectreactor:reactor-core:3.6.8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.9.0")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-
+    implementation("com.h2database:h2")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
     compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")

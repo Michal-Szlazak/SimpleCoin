@@ -8,8 +8,6 @@ class WalletService(
     private val utxoService: UTXOService
 ) {
 
-
-
     fun getBalance(address: String): Double {
         return utxoService.getBalance(address)
     }
