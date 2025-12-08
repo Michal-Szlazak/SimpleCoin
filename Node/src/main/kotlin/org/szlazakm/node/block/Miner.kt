@@ -45,9 +45,12 @@ class Miner(
 
     private fun onChainHeadChanged(newHead: Block) {
         scope.launch {
+            val oldJob = miningJob
+            miningJob = null
+            oldJob?.cancelAndJoin() // wait for old one to finish
+
             miningLock.withLock {
                 logger.info("Chain head changed (#${newHead.index}), restarting mining...")
-                miningJob?.cancelAndJoin() // wait for old one to finish
                 startMining()
             }
         }

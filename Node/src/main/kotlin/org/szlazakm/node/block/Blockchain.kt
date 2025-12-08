@@ -2,13 +2,16 @@ package org.szlazakm.node.block
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.szlazakm.node.config.MinerProperties
 import org.szlazakm.node.data.Block
 import org.szlazakm.node.data.ChainResponseMessage
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.log
 
 @Service
-class Blockchain {
+class Blockchain(
+    private val minerProperties: MinerProperties
+) {
 
     private val logger = LoggerFactory.getLogger(Blockchain::class.java)
 
@@ -61,7 +64,13 @@ class Blockchain {
                 false
             }
 
-            block.previousHash == lastBlock.hash && isValidNewBlock(block, lastBlock) -> {
+            block.previousHash == lastBlock.hash -> {
+
+                if(!isValidNewBlock(block, lastBlock)) {
+                    logger.warn("Received invalid new Block. Skipping.")
+                    return false
+                }
+
                 mainChain.add(block)
                 logger.info("Added block #${block.index} to main chain")
                 notifyChainHeadChanged(block)
@@ -76,7 +85,7 @@ class Blockchain {
             }
 
             else -> {
-                logger.warn("Received orphan block (no known parent): ${block.hash}")
+                logger.warn("Received invalid or orphan block (no known parent): ${block.hash}")
                 //TODO Resolve the missing parent, request the chain from node
                 false
             }
@@ -106,7 +115,8 @@ class Blockchain {
     private fun isValidBlock(newBlock: Block, previousBlock: Block): Boolean {
         return previousBlock.index + 1 == newBlock.index &&
                 previousBlock.hash == newBlock.previousHash &&
-                newBlock.hash == calculateHash(newBlock)
+                newBlock.hash == calculateHash(newBlock) &&
+                newBlock.hash.startsWith("0".repeat(minerProperties.difficulty))
     }
 
     private fun isValidNewBlock(newBlock: Block, previousBlock: Block): Boolean {

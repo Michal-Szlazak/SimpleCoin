@@ -1,0 +1,15 @@
+### connect
+WEBSOCKET ws://localhost:8091/ws
+
+{
+    "type":"NewBlockMessage",
+    "type":"NEW_BLOCK",
+    "block":{
+    "index": 5,
+    "timestamp": 1763464169723,
+    "previousHash": "00000ef2548a657087312e44770f8b838a9d0b652368fc76f454545a69916f43",
+    "hash": "wrong hash",
+    "data": "Block mined at 1763464169723",
+    "nonce": 298566
+  }
+}

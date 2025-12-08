@@ -3,6 +3,7 @@ package org.szlazakm.node.block
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.szlazakm.node.config.MinerProperties
 import org.szlazakm.node.data.Block
 import java.util.concurrent.atomic.AtomicReference
 
@@ -12,7 +13,7 @@ class BlockchainTest {
 
     @BeforeEach
     fun setup() {
-        blockchain = Blockchain()
+        blockchain = Blockchain(MinerProperties())
     }
 
     private fun makeValidBlock(prev: Block, data: String = "data"): Block {

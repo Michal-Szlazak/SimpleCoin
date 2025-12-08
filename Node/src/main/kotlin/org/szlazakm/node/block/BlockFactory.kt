@@ -1,8 +1,11 @@
 package org.szlazakm.node.block
 
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import org.springframework.stereotype.Component
 import org.szlazakm.node.config.MinerProperties
 import org.szlazakm.node.data.Block
+import kotlin.coroutines.coroutineContext
 
 @Component
 class BlockFactory(
@@ -12,7 +15,7 @@ class BlockFactory(
 
     private val hashPrefix = "0".repeat(minerProperties.difficulty)
 
-    fun createBlock(data: String): Block {
+    suspend fun createBlock(data: String): Block {
         val lastBlock = blockchain.getLastBlock()
         val index = lastBlock.index + 1
         val timestamp = System.currentTimeMillis()
@@ -22,6 +25,7 @@ class BlockFactory(
         var hash: String
 
         do {
+            currentCoroutineContext().ensureActive()
             nonce++
             hash = calculateHash(index, timestamp, previousHash, data, nonce)
         } while (!hash.startsWith(hashPrefix))

@@ -9,4 +9,4 @@ node:
 
 miner:
   enabled: true
-  difficulty: 5
+  difficulty: 4

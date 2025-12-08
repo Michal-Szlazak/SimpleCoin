@@ -3,3 +3,6 @@ server:
 
 node:
   static-nodes: "node1,localhost:8080"
+
+miner:
+  difficulty: 4
