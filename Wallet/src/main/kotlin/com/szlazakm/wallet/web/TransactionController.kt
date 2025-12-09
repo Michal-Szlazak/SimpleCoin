@@ -60,7 +60,7 @@ class TransactionController(
         )
 
         scope.launch {
-            transactionService.sendTransaction(transaction, decryptedPrivateKey)
+            transactionService.sendTransaction(transaction, decryptedPrivateKey, identity.publicKey)
         }
     }
 }

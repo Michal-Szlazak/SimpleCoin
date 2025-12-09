@@ -11,6 +11,8 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.szlazakm.node.domain.Transaction
 import java.util.Collections.emptyList
+import java.util.UUID
+import kotlin.collections.mutableListOf
 
 @Entity
 @Table(name = "transactions")
@@ -20,9 +22,6 @@ data class TransactionEntity(
     @Column(nullable = false, unique = true)
     val id: String, // transaction hash
 
-    @Column(nullable = false)
-    val publicKey: String,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "block_hash")
     val block: BlockEntity,
@@ -30,7 +29,7 @@ data class TransactionEntity(
     @OneToMany(
         mappedBy = "transaction",
         cascade = [CascadeType.ALL],
-        fetch = FetchType.LAZY,
+        fetch = FetchType.EAGER,
         orphanRemoval = true
     )
     val inputs: MutableList<TxInputEntity> = emptyList(),
@@ -38,14 +37,21 @@ data class TransactionEntity(
     @OneToMany(
         mappedBy = "transaction",
         cascade = [CascadeType.ALL],
-        fetch = FetchType.LAZY,
+        fetch = FetchType.EAGER,
         orphanRemoval = true
     )
     val outputs: MutableList<TxOutputEntity> = emptyList()
 ) {
+
+    constructor(): this(
+        id = UUID.randomUUID().toString(),
+        block = BlockEntity(),
+        inputs = mutableListOf<TxInputEntity>(),
+        outputs = mutableListOf<TxOutputEntity>()
+    )
+
     fun toDomain() = Transaction(
         id = id,
-        publicKey = publicKey,
         inputs = inputs.map { it.toDomain() },
         outputs = outputs.map { it.toDomain() }
     )

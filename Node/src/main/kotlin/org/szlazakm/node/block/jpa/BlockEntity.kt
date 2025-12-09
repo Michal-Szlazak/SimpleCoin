@@ -1,11 +1,15 @@
 package org.szlazakm.node.block.jpa
 
 import jakarta.persistence.*
+import lombok.AllArgsConstructor
+import lombok.NoArgsConstructor
 import org.szlazakm.node.domain.Block
 import org.szlazakm.node.domain.BlockHeader
 
 @Entity
 @Table(name = "blocks")
+@NoArgsConstructor
+@AllArgsConstructor
 data class BlockEntity(
 
     @Id
@@ -27,12 +31,22 @@ data class BlockEntity(
     @OneToMany(
         mappedBy = "block",
         cascade = [CascadeType.ALL],
-        fetch = FetchType.LAZY,
+        fetch = FetchType.EAGER,
         orphanRemoval = true
     )
-    val transactions: List<TransactionEntity> = emptyList()
+    val transactions: MutableList<TransactionEntity> = mutableListOf()
 
 ) {
+
+    constructor() : this(
+        hash = "",
+        index = 0,
+        timestamp = 0,
+        previousHash = "",
+        nonce = 0,
+        transactions = mutableListOf()
+    )
+
     fun toDomain(): Block =
         Block(
             header = BlockHeader(

@@ -6,18 +6,17 @@ import org.szlazakm.node.block.jpa.TransactionEntity
 import org.szlazakm.node.block.jpa.TxInputEntity
 import org.szlazakm.node.block.jpa.TxOutputEntity
 import java.security.MessageDigest
-import kotlin.collections.emptyList
 
 data class TxInput(
     val txId: String,
     val outputIndex: Int,
-    var signature: String
+    var sigScript: String
 ) {
     fun toEntity(tx: TransactionEntity) =
         TxInputEntity(
             txId = txId,
             outputIndex = outputIndex,
-            signature = signature,
+            sigScript = sigScript,
             transaction = tx
         )
 }
@@ -28,7 +27,7 @@ data class TxOutput(
 ) {
     fun toEntity(tx: TransactionEntity, index: Int) =
         TxOutputEntity(
-            value = value,
+            amount = value,
             address = address,
             outputIndex = index,
             transaction = tx
@@ -38,14 +37,13 @@ data class TxOutput(
 data class Transaction(
     val id: String,
     val inputs: List<TxInput>,
-    val outputs: List<TxOutput>,
-    val publicKey: String
+    val outputs: List<TxOutput>
 ) {
 
     companion object {
         fun calculateHash(inputs: List<TxInput>, outputs: List<TxOutput>, publicKey: String): String {
 
-            val inputData = inputs.joinToString(separator = "|") { "${it.txId}:${it.outputIndex}:${it.signature}" }
+            val inputData = inputs.joinToString(separator = "|") { "${it.txId}:${it.outputIndex}" }
             val outputData = outputs.joinToString(separator = "|") { "${it.address}:${it.value}" }
             val data = "$inputData|$outputData|$publicKey"
 
@@ -62,14 +60,13 @@ data class Transaction(
     fun isCoinbase(): Boolean {
         if(inputs.size != 1) return false
         if(outputs.size != 1) return false
-        if(!inputs[0].signature.startsWith("coinbase_")) return false
+        if(!inputs[0].sigScript.startsWith("coinbase_")) return false
         return true
     }
 
     fun toEntity(block: BlockEntity): TransactionEntity {
         val txEntity = TransactionEntity(
             id = id,
-            publicKey = publicKey,
             inputs = mutableListOf(),
             outputs = mutableListOf(),
             block = block,

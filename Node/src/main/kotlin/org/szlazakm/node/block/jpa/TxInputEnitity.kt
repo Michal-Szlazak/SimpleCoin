@@ -25,15 +25,24 @@ data class TxInputEntity(
     val outputIndex: Int,
 
     @Column(nullable = false)
-    var signature: String,
+    var sigScript: String,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transaction_id")
     val transaction: TransactionEntity
 ) {
+
+    constructor() : this(
+        id = 0,
+        txId = "",
+        outputIndex = 0,
+        sigScript = "",
+        transaction = TransactionEntity()
+    )
+
     fun toDomain() = TxInput(
         txId = txId,
         outputIndex = outputIndex,
-        signature = signature
+        sigScript = sigScript
     )
 }

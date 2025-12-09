@@ -51,7 +51,7 @@ class WalletMessageHandler(
                 logger.info("Received request to calculate balance for address: ${message.address}")
                 val decodedAddress = URLDecoder.decode(message.address, "UTF-8")
                 val balance = walletService.getBalance(decodedAddress)
-                walletMessenger.send(session, BalanceMessage(MessageType.BALANCE, balance))
+                walletMessenger.send(session, BalanceMessage(MessageType.BALANCE, message.address, balance))
             }
             is GetBalancesMessage -> {
                 logger.info("Received request to calculate balance for addresses: ${message.addresses}")
@@ -59,6 +59,8 @@ class WalletMessageHandler(
                 walletMessenger.send(session, BalancesMessage(MessageType.BALANCE, balances))
             }
             is GetUtxosMessage -> {
+
+                logger.info("Requested utxos")
 
                 val utxos = utxoService.getUtxos(message.addresses)
 

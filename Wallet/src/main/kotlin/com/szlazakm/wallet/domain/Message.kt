@@ -24,6 +24,7 @@ data class GetBalancesMessage(
 
 data class BalanceMessage(
     override val type: MessageType = MessageType.BALANCE,
+    val address: String,
     val balance: Double
 ) : BaseMessage()
 

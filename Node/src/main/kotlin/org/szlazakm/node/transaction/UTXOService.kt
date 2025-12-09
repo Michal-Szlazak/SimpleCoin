@@ -1,54 +1,71 @@
 package org.szlazakm.node.transaction
 
 import jakarta.annotation.PostConstruct
-import org.slf4j.LoggerFactory
-import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
 import org.szlazakm.node.block.jpa.BlockchainRepository
 import org.szlazakm.node.domain.Block
-import org.szlazakm.node.domain.BlockChainEventNewBlock
-import org.szlazakm.node.domain.BlockChainEventRebuilt
-import org.szlazakm.node.domain.BlockchainEvent
+import org.szlazakm.node.domain.Transaction
 import org.szlazakm.node.domain.TxOutput
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 @Service
 class UTXOService(
     private val blockchainRepository: BlockchainRepository
 ) {
-
-    private val logger = LoggerFactory.getLogger(UTXOService::class.java)
     private val utxos = ConcurrentHashMap<String, TxOutput>()
+    private val lock = ReentrantLock()
 
     @PostConstruct
     fun onInit() {
         rebuildFromChain(blockchainRepository.findAll().map { it.toDomain() })
     }
 
-    @EventListener
-    fun onBlockchainEvent(event: BlockchainEvent) {
-
-        logger.info("Received blockchain event: {}", event.type)
-
-        when (event) {
-            is BlockChainEventNewBlock -> applyBlock(event.newBlock)
-            is BlockChainEventRebuilt -> rebuildFromChain(event.chain)
-        }
+    fun applyBlock(block: Block): Result<Unit> {
+        return addTransactionsWithStaging(block.transactions)
     }
 
-    private fun applyBlock(block: Block) {
-        block.transactions.forEach { tx ->
+    private fun addTransactionsWithStaging(transactions: List<Transaction>): Result<Unit> {
 
-            tx.inputs.forEach { input ->
-                val utxoKey = "${input.txId}:${input.outputIndex}"
-                utxos.remove(utxoKey)
+        lock.withLock {
+
+            val stagingUtxos = utxos.toMutableMap()
+
+            transactions.forEachIndexed { index, tx ->
+
+                if(tx.isCoinbase() && index == 0) {
+                    tx.outputs.forEachIndexed { index, output ->
+                        val utxoKey = "${tx.id}:$index"
+                        stagingUtxos[utxoKey] = output
+                    }
+                } else if(tx.isCoinbase() && index != 0) {
+                    return Result.failure(Exception("Wrong coinbase transaction."))
+                } else {
+
+                    tx.inputs.forEach { input ->
+                        val utxoKey = "${input.txId}:${input.outputIndex}"
+
+                        if(stagingUtxos.containsKey(utxoKey)) {
+                            stagingUtxos.remove(utxoKey)
+                        } else {
+                            return Result.failure(Exception("Transaction with id ${input.txId} not found"))
+                        }
+                    }
+
+                    tx.outputs.forEachIndexed { index, output ->
+                        val utxoKey = "${tx.id}:$index"
+                        stagingUtxos[utxoKey] = output
+                    }
+                }
+
             }
 
-            tx.outputs.forEachIndexed { index, output ->
-                val utxoKey = "${tx.id}:$index"
-                utxos[utxoKey] = output
-            }
+            utxos.clear()
+            utxos.putAll(stagingUtxos)
+            return Result.success(Unit)
         }
+
     }
 
     private fun rebuildFromChain(blockchain: List<Block>) {
@@ -68,8 +85,6 @@ class UTXOService(
             .groupBy { it.address }
             .mapValues { (_, outs) -> outs.sumOf { it.value } }
     }
-
-    fun getAllUtxos(): Map<String, TxOutput> = utxos.toMap()
 
     fun getUtxo(txId: String) = utxos[txId]
 

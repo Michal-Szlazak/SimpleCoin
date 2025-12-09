@@ -15,24 +15,33 @@ import org.szlazakm.node.domain.TxOutput
 @Table(name = "tx_outputs")
 data class TxOutputEntity(
 
-        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0,
 
-        @Column(nullable = false)
-        val value: Double,
+    @Column(nullable = false)
+        val amount: Double,
 
-        @Column(nullable = false)
+    @Column(nullable = false)
         val address: String,
 
-        @Column(nullable = false)
+    @Column(nullable = false)
         val outputIndex: Int, // needed for UTXO references
 
-        @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "transaction_id")
         val transaction: TransactionEntity
 ) {
+
+    constructor() : this(
+        id = 0,
+        amount = 0.0,
+        address = "",
+        outputIndex = 0,
+        transaction = TransactionEntity()
+    )
+
     fun toDomain() = TxOutput(
-        value = value,
+        value = amount,
         address = address
     )
 }

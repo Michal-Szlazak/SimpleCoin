@@ -73,4 +73,14 @@ class NodeController(
         model.addAttribute("message", "Miner configuration updated successfully.")
         return "redirect:/node"
     }
+
+    @PostMapping("/miner/disable")
+    fun diableMiner(): Unit {
+        minerProperties.enabled = false
+    }
+
+    @PostMapping("/miner/enable")
+    fun enableMiner(): Unit {
+        minerProperties.enabled = true
+    }
 }

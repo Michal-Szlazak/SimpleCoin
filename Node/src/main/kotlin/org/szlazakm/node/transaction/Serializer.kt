@@ -30,8 +30,6 @@ object Serializer {
             buffer.put(addrBytes)
         }
 
-        buffer.put(tx.publicKey.toByteArray())
-
         val bytes = ByteArray(buffer.position())
         System.arraycopy(buffer.array(), 0, bytes, 0, bytes.size)
         return bytes

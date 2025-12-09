@@ -21,11 +21,11 @@ data class Block (
             timestamp = header.timestamp,
             previousHash = header.previousHash,
             nonce = header.nonce,
-            transactions = emptyList() // added after creation
+            transactions = mutableListOf() // added after creation
         )
 
         val txEntities = transactions.map { it.toEntity(blockEntity) }
 
-        return blockEntity.copy(transactions = txEntities)
+        return blockEntity.copy(transactions = txEntities.toMutableList())
     }
 }

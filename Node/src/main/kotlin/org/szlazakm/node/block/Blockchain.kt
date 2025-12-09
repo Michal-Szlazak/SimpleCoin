@@ -4,19 +4,23 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.szlazakm.node.block.jpa.BlockchainRepository
+import org.szlazakm.node.config.MinerProperties
 import org.szlazakm.node.domain.Block
 import org.szlazakm.node.domain.BlockChainEventNewBlock
 import org.szlazakm.node.domain.BlockHeader
 import org.szlazakm.node.domain.BlockchainEvent
 import org.szlazakm.node.domain.BlockchainEventType
 import org.szlazakm.node.transaction.TransactionValidator
+import org.szlazakm.node.transaction.UTXOService
 import java.util.concurrent.CopyOnWriteArrayList
 
 @Service
 class Blockchain(
     private val eventPublisher: ApplicationEventPublisher,
     private val transactionValidator: TransactionValidator,
-    private val blockchainRepository: BlockchainRepository
+    private val blockchainRepository: BlockchainRepository,
+    private val utxoService: UTXOService,
+    private val minerProperties: MinerProperties,
 ) {
 
     private val logger = LoggerFactory.getLogger(Blockchain::class.java)
@@ -56,16 +60,20 @@ class Blockchain(
             return false
         }
 
+        val utxoResult = utxoService.applyBlock(block)
+        if (utxoResult.isFailure) {
+            logger.warn("Failed to apply transactions from block ${block.header.hash}. Skipping.")
+            return false
+        }
+
         val lastBlock = getLastBlock()
         val blockHeader = block.header
         val lastBlockHeader = lastBlock.header
 
         return when {
-            // 1. Extends current main chain
 
-            blockchainRepository.findAll().map { it.toDomain() }.any { it == block } -> {
+            blockchainRepository.findAllWithTransactions().map { it.toDomain() }.any { it == block } -> {
                 logger.info("Received existing block. Skipping.")
-                //TODO handle potential fork chains
                 false
             }
 
@@ -108,6 +116,10 @@ class Blockchain(
 
     fun validateChain(blockHeaders: List<BlockHeader>): Boolean {
 
+        if (blockHeaders.isEmpty() || blockHeaders[0] != blockchainRepository.findAll().first().toDomain().header) {
+            return false
+        }
+
         for(i in 1 until blockHeaders.size) {
             if(!isValidBlock(blockHeaders[i], blockHeaders[i - 1])) {
                 return false
@@ -119,14 +131,16 @@ class Blockchain(
     private fun isValidBlock(newBlockHeader: BlockHeader, previousBlockHeader: BlockHeader): Boolean {
         return previousBlockHeader.index + 1 == newBlockHeader.index &&
                 previousBlockHeader.hash == newBlockHeader.previousHash &&
-                newBlockHeader.hash == calculateHash(newBlockHeader)
+                newBlockHeader.hash == calculateHash(newBlockHeader) &&
+                newBlockHeader.hash.startsWith("0".repeat(minerProperties.difficulty))
     }
 
     private fun isValidNewBlock(newBlockHeader: BlockHeader, previousBlockHeader: BlockHeader): Boolean {
         return previousBlockHeader.index + 1 == newBlockHeader.index &&
                 previousBlockHeader.hash == newBlockHeader.previousHash &&
                 newBlockHeader.hash == calculateHash(newBlockHeader) &&
-                isValidTimestamp(newBlockHeader, previousBlockHeader)
+                isValidTimestamp(newBlockHeader, previousBlockHeader) &&
+                newBlockHeader.hash.startsWith("0".repeat(minerProperties.difficulty))
     }
 
     private fun isValidTimestamp(newBlockHeader: BlockHeader, previousBlockHeader: BlockHeader): Boolean {

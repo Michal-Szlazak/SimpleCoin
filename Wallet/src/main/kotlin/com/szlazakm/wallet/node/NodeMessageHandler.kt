@@ -6,13 +6,15 @@ import com.szlazakm.wallet.domain.BalancesMessage
 import com.szlazakm.wallet.domain.BaseMessage
 import com.szlazakm.wallet.domain.UtxosMessage
 import com.szlazakm.wallet.transaction.UTXOService
+import com.szlazakm.wallet.wallet.WalletState
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.socket.WebSocketSession
 
 @Component
 class NodeMessageHandler(
-    private val utxoService: UTXOService
+    private val utxoService: UTXOService,
+    private val walletState: WalletState
 ) {
 
     private val objectMapper = jacksonObjectMapper()
@@ -31,9 +33,11 @@ class NodeMessageHandler(
 
             is BalanceMessage -> {
                 logger.info("Balance: ${message.balance}")
+                walletState.updateBalance(message.address, message.balance)
             }
             is BalancesMessage -> {
                 logger.info("Balances: ${message.balances}")
+                walletState.updateBalances(message.balances)
             }
             is UtxosMessage -> {
                 logger.debug("Utxos: {}", message.utxos)

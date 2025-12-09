@@ -3,7 +3,7 @@ package com.szlazakm.wallet.domain
 data class TxInput(
     val txId: String,
     val outputIndex: Int,
-    var signature: ByteArray
+    var sigScript: String
 )
 
 data class TxOutput(
@@ -14,6 +14,5 @@ data class TxOutput(
 data class Transaction(
     val id: String,
     val inputs: List<TxInput>,
-    val outputs: List<TxOutput>,
-    val publicKey: String
+    val outputs: List<TxOutput>
 )

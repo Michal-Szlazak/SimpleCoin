@@ -6,11 +6,10 @@ import com.szlazakm.wallet.domain.GetBalancesMessage
 import com.szlazakm.wallet.domain.MessageType
 import com.szlazakm.wallet.domain.Transaction
 import com.szlazakm.wallet.domain.TransactionMessage
-import com.szlazakm.wallet.node.ConnectionService
 import com.szlazakm.wallet.node.NodeMessenger
-import com.szlazakm.wallet.wallet.KeyService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.util.Base64
 
 @Service
 class TransactionService(
@@ -45,12 +44,12 @@ class TransactionService(
 
     }
 
-    suspend fun sendTransaction(transaction: Transaction, privateKeyBytes: ByteArray) {
+    suspend fun sendTransaction(transaction: Transaction, privateKeyBytes: ByteArray, publicKeyBytes: String) {
 
         transaction.inputs.forEachIndexed { i, input ->
 
             val utxos = utxoService.getCurrentUtxos()
-            val prevUtxos = utxos[input.txId]
+            val prevUtxos = utxos["${input.txId}:${input.outputIndex}"]
 
             prevUtxos?.let {
 
@@ -61,7 +60,7 @@ class TransactionService(
                     prevOutputAddress = prevUtxos.address
                 )
 
-                input.signature = signature
+                input.sigScript = Base64.getEncoder().encodeToString(signature) + ":" + publicKeyBytes
             } ?: run {
                 logger.error("Failed to sign transaction input: $input. ")
                 return

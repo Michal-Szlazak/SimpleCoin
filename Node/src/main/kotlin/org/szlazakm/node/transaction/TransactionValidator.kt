@@ -49,7 +49,6 @@ class TransactionValidator(
 
     private fun validateCoinbaseTransaction(transaction: Transaction): Result<Unit> {
 
-        //TODO: calculate and check the fees
         val result = transaction.outputs[0].value <= minerProperties.reward
 
         return if(result) {
@@ -62,9 +61,19 @@ class TransactionValidator(
     private fun validateInputs(transaction: Transaction, spentUtxos: MutableSet<String>): Result<Unit> {
 
         val decoder = Base64.getDecoder()
-        val recreatedAddress = sha256Ripemd160(decoder.decode(transaction.publicKey))
 
         transaction.inputs.forEachIndexed { index, txIn ->
+
+            val decodedSigScript = txIn.sigScript.split(":")
+
+            if(decodedSigScript.size != 2) {
+                return Result.failure(Exception("Invalid sigScript. Expected {amount}:{amount}, got ${txIn.sigScript}"))
+            }
+
+            val signature = decodedSigScript[0]
+            val pubKey = decodedSigScript[1]
+
+            val recreatedAddress = sha256Ripemd160(decoder.decode(pubKey))
 
             if(spentUtxos.contains("${txIn.txId}:${txIn.outputIndex}")) {
                 logger.warn("Transaction input $txIn already spent. Transaction invalid.")
@@ -73,7 +82,7 @@ class TransactionValidator(
                 spentUtxos.add("${txIn.txId}:${txIn.outputIndex}")
             }
 
-            val prevOutputAddress = utxoService.getUtxo(txIn.txId)?.address
+            val prevOutputAddress = utxoService.getUtxo("${txIn.txId}:${txIn.outputIndex}")?.address
 
             if(prevOutputAddress == null) {
                 logger.warn("Unspent output not found for input $txIn. Transaction invalid.")
@@ -90,8 +99,8 @@ class TransactionValidator(
                 transaction,
                 index,
                 prevOutputAddress,
-                txIn.signature,
-                decoder.decode(transaction.publicKey)
+                signature,
+                decoder.decode(pubKey)
             )
 
             if(!signatureValid) {
@@ -113,7 +122,7 @@ class TransactionValidator(
 
         transaction.inputs.forEach { transaction ->
 
-            val utxo = utxoService.getUtxo(transaction.txId)
+            val utxo = utxoService.getUtxo("${transaction.txId}:${transaction.outputIndex}")
             if(utxo != null) {
                 inputSum += utxo.value
             } else {
@@ -138,18 +147,15 @@ class TransactionValidator(
         providedSignatureBase64: String,
         providedPublicKeyBytes: ByteArray
     ): Boolean {
-        // Step 1: Recreate the same signing data as the wallet
+
         val signingData = Serializer.serializeTransactionForSigning(tx, inputIndex, prevOutputAddress)
         val hash = doubleSha256(signingData)
 
-        // Step 2: Decode the Base64 signature
         val signatureBytes = Base64.getDecoder().decode(providedSignatureBase64)
 
-        // Step 3: Rebuild the public key
         val keyFactory = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME)
         val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(providedPublicKeyBytes))
 
-        // Step 4: Verify the signature
         val verifier = Signature.getInstance("SHA256withECDSA", BouncyCastleProvider.PROVIDER_NAME)
         verifier.initVerify(publicKey)
         verifier.update(hash)

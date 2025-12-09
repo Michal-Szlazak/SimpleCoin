@@ -6,6 +6,12 @@ spring:
     cache: false
     prefix: file:src/main/resources/templates/
 
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+
 node:
   static-nodes: ${STATIC_NODES}
   peer-limit: ${PEER_LIMIT:3}

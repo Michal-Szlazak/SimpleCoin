@@ -95,7 +95,7 @@ class Miner(
             }
 
             val poolTransactions = memPool.getAll()
-            val transactions = listOf(createRewardTransaction(lastBlock.header.index)) + poolTransactions
+            val transactions = listOf(createRewardTransaction(lastBlock.header.hash)) + poolTransactions
             val newBlock = Block(newBlockHeader, transactions)
             val added = blockchain.addBlock(newBlock)
 
@@ -110,12 +110,12 @@ class Miner(
         }
     }
 
-    private fun createRewardTransaction(index: Int): Transaction {
+    private fun createRewardTransaction(lastBlockHash: String): Transaction {
 
         val coinbaseInput = TxInput(
-            txId = "0".repeat(64),
+            txId =  lastBlockHash.take(64),
             outputIndex = -1,
-            signature = "coinbase_$index"
+            sigScript = "coinbase_"
         )
 
         val rewardOutput = TxOutput(
@@ -124,10 +124,9 @@ class Miner(
         )
 
         return Transaction(
-            id = Transaction.calculateHash(listOf(coinbaseInput), listOf(rewardOutput), minerProperties.publicKey),
+            id = Transaction.calculateHash(listOf(coinbaseInput), listOf(rewardOutput), ""),
             inputs = listOf(coinbaseInput),
             outputs = listOf(rewardOutput),
-            publicKey = minerProperties.publicKey,
         )
     }
 
