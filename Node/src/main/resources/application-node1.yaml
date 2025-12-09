@@ -9,6 +9,6 @@ node:
 
 miner:
   enabled: true
-  difficulty: 5
-  address: "pawRn2srgWWEguTbdpo59Cc0QLk="
+  difficulty: 4
+  address: "gJUDBsklBkNscKGt3/oIxa6m82U="
   public-key: ${MINER_PUBLIC_KEY:}

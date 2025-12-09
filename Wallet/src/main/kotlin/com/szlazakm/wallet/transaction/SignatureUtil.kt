@@ -29,7 +29,7 @@ object SignatureUtil {
         return signatureBytes
     }
 
-    private fun doubleSha256(data: ByteArray): ByteArray {
+    fun doubleSha256(data: ByteArray): ByteArray {
         val sha = MessageDigest.getInstance("SHA-256")
         return sha.digest(sha.digest(data))
     }

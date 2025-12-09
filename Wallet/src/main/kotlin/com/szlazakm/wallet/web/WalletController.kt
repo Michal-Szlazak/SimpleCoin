@@ -41,12 +41,4 @@ class WalletController(
         return utxoService.getCurrentUtxos()
     }
 
-    @PostMapping("/node/connect")
-    fun nodeConnect(
-        @RequestParam(value = "host") nodeHost: String,
-    ): String {
-        connectionService.connect(nodeHost)
-        return "redirect:/wallet"
-    }
-
 }

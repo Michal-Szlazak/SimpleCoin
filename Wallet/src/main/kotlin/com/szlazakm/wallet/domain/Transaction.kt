@@ -12,7 +12,7 @@ data class TxOutput(
 )
 
 data class Transaction(
-    val id: String,
+    var id: String,
     val inputs: List<TxInput>,
     val outputs: List<TxOutput>
 )

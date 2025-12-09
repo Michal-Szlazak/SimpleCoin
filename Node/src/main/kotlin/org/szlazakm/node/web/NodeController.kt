@@ -77,10 +77,12 @@ class NodeController(
     @PostMapping("/miner/disable")
     fun diableMiner(): Unit {
         minerProperties.enabled = false
+        miner.stopMining()
     }
 
     @PostMapping("/miner/enable")
     fun enableMiner(): Unit {
         minerProperties.enabled = true
+        miner.startMining()
     }
 }

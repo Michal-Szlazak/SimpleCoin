@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
-@Controller
+@RestController
 @RequestMapping("/identity")
 class IdentityController(
     private val identityService: IdentityService,
@@ -32,11 +32,10 @@ class IdentityController(
     fun createIdentity(
         @RequestParam name: String,
         @RequestParam password: String
-    ): String {
+    ) {
 
         val identity = identityService.generateNewIdentity(password)
         val result = persistenceService.persist(name, identity)
         logger.info(result.toString())
-        return "redirect:/wallet"
     }
 }

@@ -2,6 +2,7 @@ package org.szlazakm.node.wallet.message
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.socket.TextMessage
@@ -22,7 +23,7 @@ class WalletMessenger {
 
     private suspend fun send(session: WebSocketSession, json: String) {
         try {
-            mutex.lock {
+            mutex.withLock {
                 session.sendMessage(TextMessage(json))
             }
         } catch (e: Exception) {

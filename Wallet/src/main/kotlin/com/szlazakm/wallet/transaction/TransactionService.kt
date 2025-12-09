@@ -10,6 +10,7 @@ import com.szlazakm.wallet.node.NodeMessenger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.Base64
+import java.util.UUID
 
 @Service
 class TransactionService(
@@ -45,6 +46,12 @@ class TransactionService(
     }
 
     suspend fun sendTransaction(transaction: Transaction, privateKeyBytes: ByteArray, publicKeyBytes: String) {
+
+        val txId = SignatureUtil.doubleSha256(
+            Serializer.serializeTransaction(transaction)
+        )
+
+        transaction.id = Base64.getEncoder().encodeToString(txId)
 
         transaction.inputs.forEachIndexed { i, input ->
 
