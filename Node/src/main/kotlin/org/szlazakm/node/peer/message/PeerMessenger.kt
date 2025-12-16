@@ -3,6 +3,7 @@ package org.szlazakm.node.peer.message
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
@@ -30,7 +31,9 @@ class PeerMessenger(
     }
 
     // === BLOCKCHAIN SYNC ===
-    suspend fun broadcastNewBlock(block: Block) = broadcast(NewBlockMessage(block = block))
+    suspend fun broadcastNewBlock(block: Block) {
+        broadcast(NewBlockMessage(block = block))
+    }
 
     suspend fun sendRequestChain(session: WebSocketSession) =
         send(session, RequestChainMessage())

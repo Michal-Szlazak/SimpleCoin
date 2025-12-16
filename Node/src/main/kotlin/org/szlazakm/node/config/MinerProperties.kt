@@ -11,4 +11,5 @@ class MinerProperties {
     var reward: Double = 0.0
     var address: String = ""
     var publicKey: String = ""
+    var delay: Long = 0
 }

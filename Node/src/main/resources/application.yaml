@@ -1,6 +1,10 @@
 spring:
   application:
     name: Node
+  websocket:
+    max-text-message-size: 10MB
+    max-binary-message-size: 10MB
+
 
   thymeleaf:
     cache: false
@@ -19,6 +23,8 @@ node:
   node-hostname: ${NODE_HOSTNAME:nodeId}
   node-port: ${NODE_PORT}
   ensure-peer-limit: true
+  gossip-peers: false
+  unordered-blocks: false
 
 miner:
   enabled: ${MINER_ENABLED:false}

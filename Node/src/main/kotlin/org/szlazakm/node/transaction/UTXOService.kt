@@ -1,8 +1,6 @@
 package org.szlazakm.node.transaction
 
-import jakarta.annotation.PostConstruct
 import org.springframework.stereotype.Service
-import org.szlazakm.node.block.jpa.BlockchainRepository
 import org.szlazakm.node.domain.Block
 import org.szlazakm.node.domain.Transaction
 import org.szlazakm.node.domain.TxOutput
@@ -12,21 +10,19 @@ import kotlin.concurrent.withLock
 
 @Service
 class UTXOService(
-    private val blockchainRepository: BlockchainRepository
 ) {
     private val utxos = ConcurrentHashMap<String, TxOutput>()
     private val lock = ReentrantLock()
-
-    @PostConstruct
-    fun onInit() {
-        rebuildFromChain(blockchainRepository.findAll().map { it.toDomain() })
-    }
 
     fun applyBlock(block: Block): Result<Unit> {
         return addTransactionsWithStaging(block.transactions)
     }
 
     private fun addTransactionsWithStaging(transactions: List<Transaction>): Result<Unit> {
+        return addTransactionsWithStaging(utxos, transactions)
+    }
+
+    private fun addTransactionsWithStaging(utxos: ConcurrentHashMap<String, TxOutput>, transactions: List<Transaction>): Result<Unit> {
 
         lock.withLock {
 
@@ -68,7 +64,7 @@ class UTXOService(
 
     }
 
-    private fun rebuildFromChain(blockchain: List<Block>) {
+    fun rebuildFromChain(blockchain: List<Block>) {
         utxos.clear()
         blockchain.forEach { applyBlock(it) }
     }
@@ -90,6 +86,20 @@ class UTXOService(
 
     fun getUtxos(addresses: List<String>): Map<String, TxOutput> {
         return utxos.filter { (_, value) -> addresses.contains(value.address) }
+    }
+
+    fun validateTransactionsInChain(chain: List<Block>): Result<Unit> {
+
+        val stagingUtxos = ConcurrentHashMap<String, TxOutput>()
+
+        for(block in chain) {
+            val result = addTransactionsWithStaging(stagingUtxos, block.transactions)
+            if(result.isFailure) {
+                return Result.failure(Exception())
+            }
+        }
+
+        return Result.success(Unit)
     }
 
 }

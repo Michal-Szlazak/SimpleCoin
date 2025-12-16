@@ -14,6 +14,11 @@ class MemPool(
     private val logger = LoggerFactory.getLogger(javaClass)
     private val pool: MutableList<Transaction> = Collections.synchronizedList(mutableListOf<Transaction>())
 
+
+    fun addTransactions(transactions: List<Transaction>) {
+        transactions.forEach { addTransaction(it)}
+    }
+
     fun addTransaction(transaction: Transaction): Result<Unit> {
 
         val validInputs = transactionValidator.validateTransaction(transaction)

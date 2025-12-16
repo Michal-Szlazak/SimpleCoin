@@ -3,8 +3,15 @@ server:
 
 node:
   node-id: node2
-  static-nodes: node1,localhost:8090
+  static-nodes: #node1,localhost:8090
   ensure-peer-limit: false
   node-hostname: localhost
   node-port: 8091
+  broadcast-new-b-locks: true
+
+miner:
+  enabled: false
+  difficulty: 5
+  address: "gJUDBsklBkNscKGt3/oIxa6m82U="
+  public-key: ${MINER_PUBLIC_KEY:}
 

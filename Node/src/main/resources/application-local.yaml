@@ -3,3 +3,4 @@ server:
 
 node:
   static-nodes: "node1,localhost:8080"
+  broadcast-new-blocks: true

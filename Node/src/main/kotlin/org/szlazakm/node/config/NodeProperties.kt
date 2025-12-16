@@ -12,6 +12,7 @@ class NodeProperties {
     var staticNodes: String = ""
     var nodePort: String = ""
     var nodeHostname: String = ""
+    var broadcastNewBLocks: Boolean = false
 
     fun getStaticNodes(): Map<String, String> {
 

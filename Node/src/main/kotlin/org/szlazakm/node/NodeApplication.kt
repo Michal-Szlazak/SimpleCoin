@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j
 import org.slf4j.LoggerFactory
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
@@ -32,16 +33,18 @@ class NodeApplication(
 
     private val logger = LoggerFactory.getLogger(NodeApplication::class.java)
 
-    @Scheduled(initialDelay = 30_000, fixedRate = 10_000)
-    fun gossipPeers() {
-        coroutineScope.launch {
-            try {
-                peerMessenger.broadcastPeerList()
-            } catch (e: Exception) {
-                logger.error("Error broadcasting peer list", e)
-            }
-        }
-    }
+//    @Scheduled(initialDelay = 30_000, fixedRate = 10_000)
+//    @ConditionalOnProperty(name = ["node.gossip-peers"], havingValue = "true", matchIfMissing = false)
+//    fun gossipPeers() {
+//        logger.info("Starting gossip peers")
+//        coroutineScope.launch {
+//            try {
+//                peerMessenger.broadcastPeerList()
+//            } catch (e: Exception) {
+//                logger.error("Error broadcasting peer list", e)
+//            }
+//        }
+//    }
 
     @Bean
     fun startup(): CommandLineRunner = CommandLineRunner {

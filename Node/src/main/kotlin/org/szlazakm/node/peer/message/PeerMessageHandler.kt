@@ -45,6 +45,7 @@ class PeerMessageHandler(
                 logger.info("Received PONG")
             }
             is PeerListMessage -> {
+                logger.info("Received peer list")
                 message.peers.forEach { (id, host) ->
                     if (id == nodeProperties.nodeId) {
                         logger.debug("Skipping self peer ($id)")
@@ -56,8 +57,10 @@ class PeerMessageHandler(
             is NewBlockMessage -> {
                 logger.info("Received NEW_BLOCK: ${message.block.header.index}")
                 if (blockchain.addBlock(message.block)) {
-                    logger.info("Block added to local chain")
-                    peerMessenger.broadcast(message) // propagate
+
+                    if(nodeProperties.broadcastNewBLocks) {
+                        peerMessenger.broadcast(message)
+                    }
                 }
             }
             is RequestChainMessage -> {
@@ -66,7 +69,7 @@ class PeerMessageHandler(
             }
             is ChainResponseMessage -> {
                 logger.info("Received chain response")
-                blockchain.resolveChain(message.blocks)
+                blockchain.resolveIncomingChain(message.blocks.toMutableList())
             }
             else -> logger.warn("Unknown message type: ${message.type}")
         }

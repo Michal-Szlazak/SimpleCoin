@@ -5,6 +5,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
 import org.szlazakm.node.config.MinerProperties
@@ -17,18 +18,23 @@ import org.szlazakm.node.domain.TxInput
 import org.szlazakm.node.domain.TxOutput
 import org.szlazakm.node.mempool.MemPool
 import org.szlazakm.node.peer.message.PeerMessenger
+import org.szlazakm.node.peer.message.UnorderedPeerMessenger
 
 @Service
 class Miner(
-    private val blockchain: Blockchain,
+    private val blockchainStore: BlockchainStore,
     private val blockFactory: BlockFactory,
     private val peerMessenger: PeerMessenger,
+    private val unorderedPeerMessenger: UnorderedPeerMessenger,
     private val memPool: MemPool,
     private val minerProperties: MinerProperties
 ) {
     private val logger = LoggerFactory.getLogger(Miner::class.java)
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var miningJob: Job? = null
+
+    @Value("\${node.unordered-blocks}")
+    private var unorderedBlocks: Boolean = false
 
     @PostConstruct
     fun init() {
@@ -83,25 +89,34 @@ class Miner(
 
     private suspend fun mineLoop() {
         while (miningJob?.isActive == true) {
-            val lastBlock = blockchain.getLastBlock()
+
+            delay(minerProperties.delay)
+
+            val lastBlock = blockchainStore.getLastBlock()
 
             logger.info("Mining on top of #${lastBlock.header.index}...")
 
-            val newBlockHeader = blockFactory.createBlockHeader()
+            val newBlockHeader = blockFactory.createBlockHeader(lastBlock)
 
-            if (blockchain.getLastBlock().header.hash != newBlockHeader.previousHash) {
+            if (blockchainStore.getLastBlock().header.hash != newBlockHeader.previousHash) {
                 logger.info("Stale mining result — chain changed while mining, restarting...")
                 continue
             }
 
             val poolTransactions = memPool.getAll()
             val transactions = listOf(createRewardTransaction(lastBlock.header.hash)) + poolTransactions
-            val newBlock = Block(newBlockHeader, transactions)
-            val added = blockchain.addBlock(newBlock)
+            val newBlock = Block(newBlockHeader, transactions.toMutableList())
+            val added = blockchainStore.appendBlock(newBlock)
 
-            if (added) {
-                logger.info("Mined new block #${newBlockHeader.index}")
-                peerMessenger.broadcastNewBlock(newBlock)
+            if (added.isSuccess) {
+                logger.info("Mined new block #${newBlockHeader.index}, hash: ${newBlockHeader.hash}")
+
+                if(unorderedBlocks) {
+                    unorderedPeerMessenger.sendUnordered(newBlock)
+                } else {
+                    peerMessenger.broadcastNewBlock(newBlock)
+                }
+
                 memPool.clear()
             } else {
                 logger.warn("Mined block rejected (chain moved?), restarting...")

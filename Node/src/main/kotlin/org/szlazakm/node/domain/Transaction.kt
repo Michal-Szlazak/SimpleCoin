@@ -1,38 +1,18 @@
 package org.szlazakm.node.domain
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import org.szlazakm.node.block.jpa.BlockEntity
-import org.szlazakm.node.block.jpa.TransactionEntity
-import org.szlazakm.node.block.jpa.TxInputEntity
-import org.szlazakm.node.block.jpa.TxOutputEntity
 import java.security.MessageDigest
 
 data class TxInput(
     val txId: String,
     val outputIndex: Int,
     var sigScript: String
-) {
-    fun toEntity(tx: TransactionEntity) =
-        TxInputEntity(
-            txId = txId,
-            outputIndex = outputIndex,
-            sigScript = sigScript,
-            transaction = tx
-        )
-}
+)
 
 data class TxOutput(
     val value: Double,
     val address: String
-) {
-    fun toEntity(tx: TransactionEntity, index: Int) =
-        TxOutputEntity(
-            amount = value,
-            address = address,
-            outputIndex = index,
-            transaction = tx
-        )
-}
+)
 
 data class Transaction(
     val id: String,
@@ -62,24 +42,5 @@ data class Transaction(
         if(outputs.size != 1) return false
         if(!inputs[0].sigScript.startsWith("coinbase_")) return false
         return true
-    }
-
-    fun toEntity(block: BlockEntity): TransactionEntity {
-        val txEntity = TransactionEntity(
-            id = id,
-            inputs = mutableListOf(),
-            outputs = mutableListOf(),
-            block = block,
-        )
-
-        val inputsEntity = inputs.map { it.toEntity(txEntity) }
-        val outputsEntity = outputs.mapIndexed { index, out ->
-            out.toEntity(txEntity, index)
-        }
-
-        return txEntity.copy(
-            inputs = inputsEntity.toMutableList(),
-            outputs = outputsEntity.toMutableList(),
-        )
     }
 }
